@@ -45,6 +45,7 @@ public:
     void mergeTensorToMatrix(Matrix* result);
     void readFromFile(const char * filename);
     void writeToFile(const char * filename);
+    void flattenWithTFOrder(Tensor *result);
 };
 
 #endif

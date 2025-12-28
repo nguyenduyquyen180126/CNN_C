@@ -212,6 +212,22 @@ void Tensor::flatten(Tensor* result){
         }
     }
 }
+void Tensor::flattenWithTFOrder(Tensor *result){
+    assert((result->n == n && result->d == 1));
+    assert(result->h == d * h * w);
+    assert(result->w == 1);
+    for(int batch = 0; batch < n; ++batch){
+        int ind = 0;
+        for(int height = 0; height < this->h; height++){
+            for(int row = 0; row < this->w; row++){
+                for(int depth = 0; depth < this->d; depth++){
+                    result->matrix[batch][0]->data[ind][0] = this->matrix[batch][depth]->data[height][row];
+                    ind++;
+                }
+            }
+        }
+    }
+}
 void Tensor::copy(Tensor* src) {
     assert(n == src->n && d == src->d && h == src->h && w == src->w);
     for(int i = 0; i < n; ++i){

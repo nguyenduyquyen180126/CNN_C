@@ -51,7 +51,8 @@ int isBatchComplete(int dataSetSize, int batchSize, int index){
 double Re_LU(double x){
     if(x >= 0)return x;
     else{
-        return 0.01*x;
+        // return 0.01*x;
+        return 0;
     }
 }
 double d_ReLU(double x){

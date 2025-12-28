@@ -16,6 +16,6 @@ Flatten::~Flatten(){
 Tensor* Flatten::forward(Tensor* input){
     assert(input->h == h_input && input->w == w_input);
     this->input->copy(input);
-    this->input->flatten(output);
+    this->input->flattenWithTFOrder(output);
     return output;
 }

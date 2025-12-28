@@ -1,11 +1,13 @@
 #include "../include/batch_norm.h"
 BatchNorm::BatchNorm(int n, int d, int h, int w, double momentum, std::string type){
+    this->type = type;
     if(type == "conv"){
         this->n = n;
         this->d = d;
         this->h = h;
         this->w = w;
         this->momentum = momentum;
+        this->epsilon = 0.001;
         gamma = new Matrix(d, 1, false);
         beta = new Matrix(d, 1, false);
         running_mean = new Matrix(d, 1);
@@ -18,6 +20,7 @@ BatchNorm::BatchNorm(int n, int d, int h, int w, double momentum, std::string ty
         this->h = h;
         this->w = w;
         this->momentum = momentum;
+        this->epsilon = 0.001;
         gamma = new Matrix(h, 1, false);
         beta = new Matrix(h, 1, false);
         running_mean = new Matrix(h, 1);
@@ -34,19 +37,38 @@ BatchNorm::~BatchNorm() {
 Tensor* BatchNorm::inference_forward(Tensor* input){
     assert(input->n == this->n && input->d == this->d && input->h == this->h && input->w == this->w);
     this->input = input;
-    for(int batch = 0; batch < this->n; batch++){
-        for(int depth = 0; depth < this->d; depth++){
-            double mean = running_mean->data[depth][0];
-            double var = running_var->data[depth][0];
-            double gamma_val = gamma->data[depth][0];
-            double beta_val = beta->data[depth][0];
-            for(int i = 0; i < this->h; i++){
-                for(int j = 0; j < this->w; j++){
-                    double x = input->matrix[batch][depth]->data[i][j];
-                    double x_hat = (x - mean) / sqrt(var + 1e-5);
-                    double y = gamma_val * x_hat + beta_val;
-                    output->matrix[batch][depth]->data[i][j] = y;
+    
+    if(type == "conv"){
+        // For conv layers: normalize across depth dimension
+        for(int batch = 0; batch < this->n; batch++){
+            for(int depth = 0; depth < this->d; depth++){
+                double mean = running_mean->data[depth][0];
+                double var = running_var->data[depth][0];
+                double gamma_val = gamma->data[depth][0];
+                double beta_val = beta->data[depth][0];
+                for(int i = 0; i < this->h; i++){
+                    for(int j = 0; j < this->w; j++){
+                        double x = input->matrix[batch][depth]->data[i][j];
+                        double x_hat = (x - mean) / sqrt(var + this->epsilon);
+                        double y = gamma_val * x_hat + beta_val;
+                        output->matrix[batch][depth]->data[i][j] = y;
+                    }
                 }
+            }
+        }
+    }
+    else if(type == "dense"){
+        // For dense layers: normalize across height dimension (features)
+        for(int batch = 0; batch < this->n; batch++){
+            for(int i = 0; i < this->h; i++){
+                double mean = running_mean->data[i][0];
+                double var = running_var->data[i][0];
+                double gamma_val = gamma->data[i][0];
+                double beta_val = beta->data[i][0];
+                double x = input->matrix[batch][0]->data[i][0];
+                double x_hat = (x - mean) / sqrt(var + this->epsilon);
+                double y = gamma_val * x_hat + beta_val;
+                output->matrix[batch][0]->data[i][0] = y;
             }
         }
     }

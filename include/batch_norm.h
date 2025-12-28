@@ -13,6 +13,7 @@ public:
     Tensor* input;
     double momentum;
     double epsilon;
+    std::string type;
     BatchNorm(int n, int d, int h, int w, double momentum, std::string type);
     void printParam();
     ~BatchNorm();
